@@ -1,0 +1,67 @@
+suppressPackageStartupMessages({
+  library(dplyr)
+  library(readr)
+})
+
+# ==============================================================================
+# 1. CONFIGURATION
+# ==============================================================================
+input_file <- "BROAD_Resistance_Gene_Survey.csv"
+output_file <- "Filtered_Candidates_FC1.5.csv"
+
+# Thresholds
+# FC >= 1.5 is equivalent to |Log2FC| >= log2(1.5) (approx 0.585)
+threshold_padj <- 0.05
+threshold_lfc  <- log2(1.5)
+
+cat(paste0("Filtering Logic: Padj < ", threshold_padj, 
+           " AND |Log2FoldChange| >= ", round(threshold_lfc, 3), 
+           " (Linear FC 1.5)\n"))
+
+# ==============================================================================
+# 2. FILTERING
+# ==============================================================================
+if(file.exists(input_file)) {
+  
+  # Load the Master File
+  df <- read.csv(input_file, stringsAsFactors = FALSE)
+  cat("Total Genes in Master File:", nrow(df), "\n")
+  
+  # Identify the comparison columns automatically based on the file structure
+  # We look for pairs of LFC_X and Padj_X
+  lfc_cols <- names(df)[grep("LFC_", names(df))]
+  
+  # Helper function to check if a row passes filters for a specific comparison
+  check_pass <- function(lfc_val, padj_val) {
+    !is.na(lfc_val) & !is.na(padj_val) & 
+      padj_val < threshold_padj & abs(lfc_val) >= threshold_lfc
+  }
+  
+  # Filter: Keep gene if it passes in AT LEAST ONE comparison
+  active_genes <- df %>%
+    filter(
+      check_pass(LFC_Mon_Constitutive, Padj_Mon_Constitutive) |
+      check_pass(LFC_Mon_Inducible,    Padj_Mon_Inducible)    |
+      check_pass(LFC_Wyo_Constitutive, Padj_Wyo_Constitutive) |
+      check_pass(LFC_Wyo_Inducible,    Padj_Wyo_Inducible)    |
+      check_pass(LFC_Ari_Inducible,    Padj_Ari_Inducible)
+    )
+  
+  # ==============================================================================
+  # 3. SAVE OUTPUT
+  # ==============================================================================
+  write.csv(active_genes, output_file, row.names = FALSE)
+  
+  cat("\n------------------------------------------------\n")
+  cat("FILTERING COMPLETE\n")
+  cat("------------------------------------------------\n")
+  cat("Genes Remaining:", nrow(active_genes), "\n")
+  cat("Saved as:", output_file, "\n")
+  
+  # Print quick stats
+  cat("\nBreakdown of Active Genes by Family:\n")
+  print(table(active_genes$Gene_Family))
+  
+} else {
+  stop("Input file 'BROAD_Resistance_Gene_Survey.csv' not found.")
+}
