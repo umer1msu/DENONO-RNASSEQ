@@ -1,3 +1,10 @@
+## Introduction
+
+RNA sequencing (RNA-seq) provides a genome-wide view of transcript abundance and is widely used to investigate gene expression differences among populations, treatments, and biological conditions. In this study, RNA-seq data from alfalfa weevil samples were processed to support de novo transcriptome assembly and downstream transcript quantification.
+
+This repository provides the scripts used for the RNA-seq data-processing workflow. The pipeline begins with read quality assessment using FastQC, followed by rRNA removal, adapter and quality trimming, and host-genome read filtering. Cleaned reads are then prepared for Trinity de novo transcriptome assembly, and transcript abundance is estimated using Salmon.
+
+The overall goal of this workflow is to generate high-quality transcriptomic resources that can be used for downstream analyses such as differential gene expression, functional annotation, and investigation of molecular responses associated with insecticide resistance. The scripts are intended for execution on an HPC cluster using Slurm and Conda-based software environments.
 # De novo RNA-seq Pipeline
 
 This repository contains shell and Slurm job scripts used for RNA-seq read processing, host-read removal, de novo transcriptome assembly, and transcript quantification.
